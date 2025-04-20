@@ -25,17 +25,17 @@ const ChatPage = () => {
     <div className="h-full flex">
       {/* Sidebar (hidden on mobile when chat is open) */}
       {(!isMobile || (isMobile && showSidebar)) && (
-        <div className={`${isMobile ? 'w-full' : 'w-1/3'} max-w-sm border-r border-gray-200`}>
+        <div className={`${isMobile ? 'w-[0%]' : 'w-1/3'} max-w-sm border-r border-gray-200`}>
           <Sidebar />
         </div>
       )}
       
       {/* Chat area (hidden on mobile when sidebar is shown) */}
-      {(!isMobile || (isMobile && !showSidebar)) && (
+      {/* {(!isMobile || (isMobile && !showSidebar)) && ( */}
         <div className="flex-1">
           <ChatBox />
         </div>
-      )}
+      {/* )} */}
     </div>
   )
 }

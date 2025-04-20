@@ -1,7 +1,7 @@
 import React, { memo, useCallback, useState, useMemo } from 'react'
 import { useChat } from '../contexts/ChatContext'
 import { useAuth } from '../contexts/AuthContext'
-import { FiLogOut, FiUser, FiSearch, FiUsers } from 'react-icons/fi'
+import { FiLogOut, FiUser, FiSearch, FiUsers, FiMenu } from 'react-icons/fi'
 import { useNavigate } from 'react-router-dom'
 import Avatar from './Avatar'
 import UserSearchModal from './UserSearchModal'
@@ -128,16 +128,25 @@ const Sidebar = () => {
   const { user, logout } = useAuth()
   const { chats, loading, selectedChat, setSelectedChat, isUserOnline } = useChat()
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const navigate = useNavigate()
   
   const handleUserClick = useCallback((chat) => {
     if (selectedChat?._id !== chat._id) {
-    setSelectedChat(chat)
-  }
+      setSelectedChat(chat)
+      // Close sidebar on mobile when chat is selected
+      if (window.innerWidth < 768) {
+        setIsSidebarOpen(false)
+      }
+    }
   }, [selectedChat, setSelectedChat])
   
   const handleProfileClick = () => {
     navigate('/profile')
+    // Close sidebar on mobile when navigating to profile
+    if (window.innerWidth < 768) {
+      setIsSidebarOpen(false)
+    }
   }
   
   const openSearchModal = () => {
@@ -148,69 +157,100 @@ const Sidebar = () => {
     setIsSearchModalOpen(false)
   }
 
+  // Toggle sidebar on mobile
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen)
+  }
+
   return (
-    <div className="flex flex-col h-full bg-white border-r border-gray-200">
-      {/* Header */}
-      <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-        <div className="flex items-center space-x-2">
-          <Avatar user={user} size="md" />
-          <h2 className="font-semibold">{user?.name || 'User'}</h2>
-        </div>
-        <div className="flex items-center space-x-2">
-          <button 
-            onClick={openSearchModal}
-            className="p-2 text-secondary-600 hover:bg-secondary-100 rounded-full transition-colors"
-            title="New chat"
-          >
-            <FiUsers size={20} />
-          </button>
-          <button 
-            onClick={handleProfileClick}
-            className="p-2 text-secondary-600 hover:bg-secondary-100 rounded-full transition-colors"
-            title="Profile"
-          >
-            <FiUser size={20} />
-          </button>
-          <button 
-            onClick={logout}
-            className="p-2 text-secondary-600 hover:bg-secondary-100 rounded-full transition-colors"
-            title="Logout"
-          >
-            <FiLogOut size={20} />
-          </button>
-        </div>
-      </div>
-      
-      {/* Search */}
-      <div className="p-4 border-b border-gray-200">
-        <div className="relative">
-          <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary-400" />
-          <input 
-            type="text" 
-            placeholder="Search or start a new chat"
-            className="w-full pl-10 pr-4 py-2 bg-secondary-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-            onClick={openSearchModal}
-            readOnly
-          />
-        </div>
-      </div>
-      
-      {/* Chat List */}
-      <div className="flex-1 overflow-y-auto">
-        <ChatList
-          chats={chats}
-          loading={loading}
-          onChatSelect={handleUserClick}
-          isUserOnline={isUserOnline}
-          currentUser={user}
+    <>
+      {/* Mobile Toggle Button */}
+      <button 
+        onClick={toggleSidebar}
+        className="fixed top-4 left-4 z-50 p-2 bg-white rounded-lg shadow-md md:hidden"
+      >
+        <FiMenu size={24} />
+      </button>
+
+      {/* Sidebar Overlay for Mobile */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+          onClick={() => setIsSidebarOpen(false)}
         />
+      )}
+
+      {/* Sidebar */}
+      <div className={`
+        fixed md:static top-0 left-0 h-full w-full md:w-auto
+        transform transition-transform duration-300 ease-in-out
+        ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+        z-40
+      `}>
+        <div className="flex flex-col h-full bg-white border-r border-gray-200">
+          {/* Header */}
+          <div className="p-4 border-b border-gray-200 flex justify-between items-center">
+            <div className="flex items-center space-x-2">
+              <Avatar user={user} size="md" />
+              <h2 className="font-semibold">{user?.name || 'User'}</h2>
+            </div>
+            <div className="flex items-center space-x-2">
+              <button 
+                onClick={openSearchModal}
+                className="p-2 text-secondary-600 hover:bg-secondary-100 rounded-full transition-colors"
+                title="New chat"
+              >
+                <FiUsers size={20} />
+              </button>
+              <button 
+                onClick={handleProfileClick}
+                className="p-2 text-secondary-600 hover:bg-secondary-100 rounded-full transition-colors"
+                title="Profile"
+              >
+                <FiUser size={20} />
+              </button>
+              <button 
+                onClick={logout}
+                className="p-2 text-secondary-600 hover:bg-secondary-100 rounded-full transition-colors"
+                title="Logout"
+              >
+                <FiLogOut size={20} />
+              </button>
+            </div>
+          </div>
+          
+          {/* Search */}
+          <div className="p-4 border-b border-gray-200">
+            <div className="relative">
+              <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-secondary-400" />
+              <input 
+                type="text" 
+                placeholder="Search or start a new chat"
+                className="w-full pl-10 pr-4 py-2 bg-secondary-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                onClick={openSearchModal}
+                readOnly
+              />
+            </div>
+          </div>
+          
+          {/* Chat List */}
+          <div className="flex-1 overflow-y-auto">
+            <ChatList
+              chats={chats}
+              loading={loading}
+              onChatSelect={handleUserClick}
+              isUserOnline={isUserOnline}
+              currentUser={user}
+            />
+          </div>
+        </div>
       </div>
       
       <UserSearchModal 
         isOpen={isSearchModalOpen} 
         onClose={closeSearchModal} 
       />
-    </div>
+    </>
   )
 }
 
